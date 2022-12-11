@@ -1,9 +1,10 @@
 import { useForm } from "react-hook-form";
+import { api } from "../../services/api";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-
+import { useNavigate } from "react-router-dom";
 import { Container, LoginContainer, Column, Spacing, Title } from "./styles";
 import { defaultValues, IFormLogin } from "./types";
 
@@ -18,8 +19,11 @@ const schema = yup
   .required();
 
 const Login = () => {
+
+  const navigate = useNavigate();
   const {
     control,
+    handleSubmit,
     formState: { errors, isValid },
   } = useForm<IFormLogin>({
     resolver: yupResolver(schema),
@@ -28,12 +32,28 @@ const Login = () => {
     reValidateMode: "onChange",
   });
 
+  const onSubmit = async (formData: IFormLogin) => {
+    try {
+      const { data } = await api.get(
+        `users?email=${formData.email}&senha=${formData.password}`
+      );
+      if (data.length === 1) {
+        navigate("/feed");
+      } else {
+        alert("Email ou senha inválido");
+      }
+    } catch {
+      alert("Houve um erro, tente novamente.");
+    }
+  };
+
   return (
     <Container>
       <LoginContainer>
         <Column>
           <Title>Login</Title>
           <Spacing />
+          <form onSubmit={handleSubmit(onSubmit)}>
           <Input
             name="email"
             placeholder="Email"
@@ -50,6 +70,7 @@ const Login = () => {
           />
           <Spacing />
           <Button title="Entrar" />
+          </form>
         </Column>
       </LoginContainer>
     </Container>
